@@ -77,7 +77,7 @@ class NeRF_pl(pl.LightningModule):
     def prepare_data(self):
         self.train_dataset = [] + load_dataset(self.args, split="train")
         self.val_dataset = [] + load_dataset(self.args, split="val")
-
+        print(self.train_dataset, self.val_dataset)
     def configure_optimizers(self):
 
         parameters = train_utils.get_parameters(self.models)
@@ -231,6 +231,7 @@ class NeRF_pl(pl.LightningModule):
         return train_utils.get_epoch_number_from_train_step(tstep, len(self.train_dataset[0]), self.args.batch_size)
 
 def main():
+    torch.use_deterministic_algorithms(True, warn_only=True)
 
     torch.cuda.empty_cache()
     args = get_opts()
@@ -243,17 +244,18 @@ def main():
                                                  monitor="val/psnr",
                                                  mode="max",
                                                  save_top_k=-1,
-                                                 every_n_val_epochs=args.save_every_n_epochs)
+                                                 every_n_epochs=args.save_every_n_epochs
+                                                 )
 
     trainer = pl.Trainer(max_steps=args.max_train_steps,
                          logger=logger,
                          callbacks=[ckpt_callback],
-                         resume_from_checkpoint=args.ckpt_path,
-                         gpus=[args.gpu_id],
-                         auto_select_gpus=False,
-                         deterministic=True,
+                         #resume_from_checkpoint=args.ckpt_path,
+                         #gpus=[args.gpu_id],
+                         #auto_select_gpus=False,
+                         deterministic=False,
                          benchmark=True,
-                         weights_summary=None,
+                         #weights_summary=None,
                          num_sanity_val_steps=2,
                          check_val_every_n_epoch=1,
                          profiler="simple")

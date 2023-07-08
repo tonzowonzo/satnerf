@@ -1,5 +1,6 @@
 from .nerf import Mapping, Siren, sine_init, first_layer_sine_init
 import torch
+torch.use_deterministic_algorithms(False)
 
 def inference(model, args, rays_xyz, z_vals, rays_d=None, sun_d=None, rays_t=None):
     """

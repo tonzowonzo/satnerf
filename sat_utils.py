@@ -7,6 +7,7 @@ import rasterio
 import datetime
 import os
 import shutil
+import utm
 import json
 import glob
 import rpcm
@@ -101,15 +102,40 @@ def utm_from_latlon(lats, lons):
     import pyproj
     import utm
     from pyproj import Transformer
-
-    n = utm.latlon_to_zone_number(lats[0], lons[0])
-    l = utm.latitude_to_zone_letter(lats[0])
-    proj_src = pyproj.Proj("+proj=latlong")
-    proj_dst = pyproj.Proj("+proj=utm +zone={}{}".format(n, l))
-    transformer = Transformer.from_proj(proj_src, proj_dst)
+    dst_crs = utm.from_latlon(lats[0], lons[0])
+    print(dst_crs)
+    utm_zone = str(dst_crs[-2]) + "N"
+    epsg = epsg_code_from_utm_zone(utm_zone)
+    transformer = Transformer.from_crs("EPSG:4326", epsg)
     easts, norths = transformer.transform(lons, lats)
+    print(easts, norths)
     #easts, norths = pyproj.transform(proj_src, proj_dst, lons, lats)
     return easts, norths
+
+
+def epsg_code_from_utm_zone(utm_zone):
+    """
+    Compute the EPSG code of a given UTM zone.
+
+    Args:
+        utm_zone (str): UTM zone number + hemisphere (e.g. "30N" or "30S")
+
+    Returns:
+        epsg (int): EPSG code
+    """
+    zone_number = int(utm_zone[:-1])
+    hemisphere = utm_zone[-1]
+
+    if hemisphere not in ["N", "S"]:
+        raise ValueError("unknown hemisphere {} in utm_zone {}".format(hemisphere,
+                                                                       utm_zone))
+
+    # EPSG = CONST + ZONE where CONST is
+    # - 32600 for positive latitudes
+    # - 32700 for negative latitudes
+    const = 32600 if hemisphere == "N" else 32700
+    return const + zone_number
+
 
 def dsm_pointwise_diff(in_dsm_path, gt_dsm_path, dsm_metadata, gt_mask_path=None, out_rdsm_path=None, out_err_path=None):
     """

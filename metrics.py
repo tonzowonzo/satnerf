@@ -3,7 +3,8 @@ This script defines the evaluation metrics and the loss functions
 """
 
 import torch
-from kornia.losses import ssim as ssim_
+torch.use_deterministic_algorithms(False)
+from kornia.losses import ssim_loss as ssim_
 
 class NerfLoss(torch.nn.Module):
     def __init__(self):

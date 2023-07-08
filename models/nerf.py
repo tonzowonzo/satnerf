@@ -4,6 +4,7 @@ This script defines the NeRF architecture
 
 import numpy as np
 import torch
+torch.use_deterministic_algorithms(False)
 #from torch import nn
 
 def sine_init(m):
